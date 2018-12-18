@@ -1,0 +1,23 @@
+<!-- Assignment of variables with arguments received -->
+{{ $imagename := (.Get 0) }}
+{{ $process := (.Get 1) }}
+{{ $options := (.Get 2) }}
+
+<!-- Get the section named media where the images are located -->
+{{ with .Site.GetPage "section" "media" }}
+  {{ $original := .Resources.GetByPrefix  $imagename }}
+
+  <!-- Conditionals to know which one is the image processing command -->
+  {{ if eq $process "Fit" }}
+    {{ .Scratch.Set "image" ($original.Fit $options)}}
+  {{ else if eq $process "Resize"}}
+    {{ .Scratch.Set "image" ($original.Resize $options) }}
+  {{ else if eq $process "Fill"}}
+    {{ .Scratch.Set "image" ($original.Fill $options) }}
+  {{ else }}
+    {{ errorf "Invalid image processing command: Must be one of Fit, Fill or Resize."}}
+  {{ end }}
+
+  {{ $image := .Scratch.Get "image" }}
+  <img src="{{ $image.RelPermalink }}" width="{{ $image.Width }}" height="{{ $image.Height }}">
+{{ end }}
