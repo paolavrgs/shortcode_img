@@ -5,8 +5,8 @@
 
 <!-- Get the section named media where the images are located -->
 {{ with .Site.GetPage "section" "media" }}
-  {{ $original := .Resources.GetByPrefix  $imagename }}
-
+  {{ $original := .Resources.GetByPrefix $imagename }}
+  
   <!-- Conditionals to know which one is the image processing command -->
   {{ if eq $process "Fit" }}
     {{ .Scratch.Set "image" ($original.Fit $options)}}
@@ -19,5 +19,12 @@
   {{ end }}
 
   {{ $image := .Scratch.Get "image" }}
-  <img src="{{ $image.RelPermalink }}" width="{{ $image.Width }}" height="{{ $image.Height }}">
+  <figure>
+    <img src="{{ $image.RelPermalink }}" width="{{ $image.Width }}" height="{{ $image.Height }}">
+    <!-- Optional text -->
+    <figcaption>
+      {{$process}} "{{$options}}"
+    </figcaption>
+  </figure>
+
 {{ end }}

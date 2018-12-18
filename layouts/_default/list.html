@@ -1,7 +1,14 @@
 {{ define "main" }}
-  <h1>List Template</h1>
-  {{ range .Pages }}
-    <a href="{{.Permalink}}">{{.Title}}</a>
-    <br>
-  {{ end }}
+  <div class="row">
+    {{ range .Pages }}
+      <div class="col-lg-3 mb-3">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">{{.Title}}</h5>
+            <a href="{{.Permalink}}" class="card-link">See more</a>
+          </div>
+        </div>
+      </div>
+    {{ end }}
+  </div>
 {{ end }}
