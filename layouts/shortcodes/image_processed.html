@@ -3,28 +3,54 @@
 {{ $process := (.Get 1) }}
 {{ $options := (.Get 2) }}
 
-<!-- Get the section named media where the images are located -->
+<!-- static file -->
+{{- .Scratch.Set "path" (.Get 0) -}}
+{{- if hasPrefix (.Scratch.Get "path") "/" -}}
+  {{- .Scratch.Set "path" (slicestr (.Scratch.Get "path") 1) -}}
+{{- end -}}
+{{- $path := .Scratch.Get "path" | relURL -}}
+
+<!-- resource file -->
 {{ with .Site.GetPage "section" "media" }}
   {{ $original := .Resources.GetByPrefix $imagename }}
-  
-  <!-- Conditionals to know which one is the image processing command -->
-  {{ if eq $process "Fit" }}
-    {{ .Scratch.Set "image" ($original.Fit $options)}}
-  {{ else if eq $process "Resize"}}
-    {{ .Scratch.Set "image" ($original.Resize $options) }}
-  {{ else if eq $process "Fill"}}
-    {{ .Scratch.Set "image" ($original.Fill $options) }}
-  {{ else }}
-    {{ errorf "Invalid image processing command: Must be one of Fit, Fill or Resize."}}
-  {{ end }}
 
-  {{ $image := .Scratch.Get "image" }}
-  <figure>
-    <img src="{{ $image.RelPermalink }}" width="{{ $image.Width }}" height="{{ $image.Height }}">
-    <!-- Optional text -->
-    <figcaption>
-      {{$process}} "{{$options}}"
-    </figcaption>
-  </figure>
+  {{ if eq $original nil }}
+    {{ if eq $process "Fit" }}
+      {{ .Scratch.Set "imagepath" ($path.Fit $options)}}
+    {{ else if eq $process "Resize"}}
+      {{ .Scratch.Set "imagepath" ($path.Resize $options) }}
+    {{ else if eq $process "Fill"}}
+      {{ .Scratch.Set "imagepath" ($path.Fill $options) }}
+    {{ else }}
+      {{ errorf "Invalid image processing command: Must be one of Fit, Fill or Resize."}}
+    {{ end }}
+
+    {{ $newpath := .Scratch.Get "imagepath" }}
+    <figure>
+      <img src="{{ $newpath.RelPermalink }}" width="{{ $newpath.Width }}" height="{{ $newpath.Height }}">
+      <figcaption>
+        {{$process}} "{{$options}}"
+      </figcaption>
+    </figure>
+  {{else}}
+    {{ if eq $process "Fit" }}
+      {{ .Scratch.Set "image" ($original.Fit $options)}}
+    {{ else if eq $process "Resize"}}
+      {{ .Scratch.Set "image" ($original.Resize $options) }}
+    {{ else if eq $process "Fill"}}
+      {{ .Scratch.Set "image" ($original.Fill $options) }}
+    {{ else }}
+      {{ errorf "Invalid image processing command: Must be one of Fit, Fill or Resize."}}
+    {{ end }}
+
+    {{ $image := .Scratch.Get "image" }}
+    <figure>
+      <img src="{{ $image.RelPermalink }}" width="{{ $image.Width }}" height="{{ $image.Height }}">
+      <!-- Optional text -->
+      <figcaption>
+        {{$process}} "{{$options}}"
+      </figcaption>
+    </figure>
+  {{end}} 
 
 {{ end }}
