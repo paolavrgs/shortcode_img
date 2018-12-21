@@ -1,30 +1,71 @@
 <!-- Assignment of variables with arguments received -->
 {{ $imagename := (.Get 0) }}
-{{ $process := (.Get 1) }}
+{{ $method := (.Get 1) }}
 {{ $options := (.Get 2) }}
 
-<!-- Get the section named media where the images are located -->
-{{ with .Site.GetPage "section" "media" }}
-  {{ $original := .Resources.GetByPrefix $imagename }}
-  
-  <!-- Conditionals to know which one is the image processing command -->
-  {{ if eq $process "Fit" }}
-    {{ .Scratch.Set "image" ($original.Fit $options)}}
-  {{ else if eq $process "Resize"}}
-    {{ .Scratch.Set "image" ($original.Resize $options) }}
-  {{ else if eq $process "Fill"}}
-    {{ .Scratch.Set "image" ($original.Fill $options) }}
-  {{ else }}
-    {{ errorf "Invalid image processing command: Must be one of Fit, Fill or Resize."}}
+{{ if in $imagename "/" }}
+  {{ $split := split $imagename "/" }}
+  {{ .Scratch.Set "path" (first 1 $split)}}
+  {{ .Scratch.Set "slug" (last 1 $split)}}
+
+  {{ $path := (delimit (.Scratch.Get "path") " ") | string }}
+  {{ $slug := (delimit (.Scratch.Get "slug") " ") | string }}
+
+  {{ with .Site.GetPage "section" $path }}
+    {{ $original := .Resources.GetByPrefix $slug }}
+    {{ if eq $original nil }}
+      <div class="alert alert-danger" role="alert">
+        No existing file matching with {{$slug}} in {{$path}} folder
+      </div>
+    {{ end }}
+    
+    {{ if not (eq $original nil) }}
+      {{ if eq $method "Fit" }}
+        {{ .Scratch.Set "image" ($original.Fit $options)}}
+      {{ else if eq $method "Resize"}}
+        {{ .Scratch.Set "image" ($original.Resize $options) }}
+      {{ else if eq $method "Fill"}}
+        {{ .Scratch.Set "image" ($original.Fill $options) }}
+      {{ else }}
+        {{ errorf "Invalid image processing command: Must be one of Fit, Fill or Resize."}}
+      {{ end }}
+
+      {{ $image := .Scratch.Get "image" }}
+      <figure>
+        <img src="{{ $image.RelPermalink }}" width="{{ $image.Width }}" height="{{ $image.Height }}">
+        <figcaption>
+          {{$method}} "{{$options}}"
+        </figcaption>
+      </figure>
+    {{ end }}
+
   {{ end }}
 
-  {{ $image := .Scratch.Get "image" }}
-  <figure>
-    <img src="{{ $image.RelPermalink }}" width="{{ $image.Width }}" height="{{ $image.Height }}">
-    <!-- Optional text -->
-    <figcaption>
-      {{$process}} "{{$options}}"
-    </figcaption>
-  </figure>
+{{- else -}}
+  {{ $imageResource := .Page.Parent.Resources.GetByPrefix $imagename }}
+  {{ if eq $imageResource nil }}
+    <div class="alert alert-danger" role="alert">
+      No resources in the page bundle
+    </div>
+  {{ end }}
 
-{{ end }}
+  {{ if not (eq $imageResource nil) }}
+    {{ if eq $method "Fit" }}
+      {{ .Scratch.Set "newimage" ($imageResource.Fit $options)}}
+    {{ else if eq $method "Resize"}}
+      {{ .Scratch.Set "newimage" ($imageResource.Resize $options) }}
+    {{ else if eq $method "Fill"}}
+      {{ .Scratch.Set "newimage" ($imageResource.Fill $options) }}
+    {{ else }}
+      {{ errorf "Invalid image processing command: Must be one of Fit, Fill or Resize."}}
+    {{ end }}
+
+    {{ $newimage := .Scratch.Get "newimage" }}
+    <figure>
+      <img src="{{ $newimage.RelPermalink }}" width="{{ $newimage.Width }}" height="{{ $newimage.Height }}">
+      <figcaption>
+        {{$method}} "{{$options}}"
+      </figcaption>
+    </figure>
+  {{ end }}
+{{end}}
